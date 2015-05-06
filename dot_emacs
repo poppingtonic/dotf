@@ -1,0 +1,633 @@
+; -*- mode: elisp -*-
+;;I hope this works out...
+(if (= emacs-major-version 23)
+    (load "/home/brian/.emacs.d/init-fix-23.el"))
+
+(if (= emacs-major-version 24)
+    (load "/home/brian/.emacs.d/init-fix.el")) 
+
+
+;;; package managers
+;; melpa & melpa-stable
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages") t)
+(add-to-list 'package-archives '("melpa-stable" . "http://melpa-stable.milkbox.net/packages") t)
+(package-initialize)
+
+
+;;;efficiency mods from steve yegge
+;;prefer backward-kill-word over backspace
+ 
+(global-set-key "\C-w" 'backward-kill-word)
+(global-set-key "\C-x\C-k" 'kill-region)
+(global-set-key "\C-c\C-k" 'kill-region)
+
+;;;; Eshell
+(load "/home/brian/.emacs.d/custom/eshell-here.el")
+(require 'eshell)
+(require 'em-smart)
+(setq eshell-where-to-jump 'begin)
+(setq eshell-review-quick-commands nil)
+(setq eshell-smart-space-goes-to-end t)
+
+;; add htop to eshell visual commands
+(add-to-list 'eshell-visual-commands "htop")
+
+;;Org Mode
+(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
+(add-to-list 'auto-mode-alist '("\\.decision\\'" . org-mode))
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-cb" 'org-iswitchb)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cc" 'org-capture)
+
+
+;;This is a very cool mod after I swapped Caps Lock and Ctrl in the Keyboard Layout option
+;;in the settings page.
+(global-set-key "\C-x\C-m" 'execute-extended-command)
+(global-set-key "\C-c\C-m" 'execute-extended-command)
+
+;; I don't want a scroll-bar, tool-bar or a menu-bar.
+(if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+
+;;; I might remove this option later...to setup backup dirs, so I don't end up seeing
+;;; foo.bar~ files in the same dir as every file called foo.bar
+(setq make-backup-files t)
+(setq backup-directory-alist '(("." . "~/.emacs.backups")))
+(setq tramp-backup-directory-alist '(("." . "~/.emacs.tramp.backups")))
+
+;;;prettification mods from "dan's functional rants"
+;; Text and the such
+;; Use colors to highlight commands, etc.
+(global-font-lock-mode t)
+;; Disable the welcome message
+(setq inhibit-startup-message t)
+;; Format the title-bar to always include the buffer name
+(setq frame-title-format "%b")
+;; Display time
+(display-time)
+;; Make the mouse wheel scroll Emacs
+(mouse-wheel-mode t)
+;; Always end a file with a newline
+(setq require-final-newline nil)
+;; Stop emacs from arbitrarily adding lines to the end of a file when the
+;; cursor is moved past the end of it:
+(setq next-line-add-newlines nil)
+;; Flash instead of that annoying bell
+(setq visible-bell t)
+;; Remove icons toolbar
+(if (> emacs-major-version 20)
+    (tool-bar-mode -1))
+;; Use y or n instead of yes or not
+(fset 'yes-or-no-p 'y-or-n-p)
+
+
+;;;more mods
+(defun faces_x ()
+  ;; these are used when in X
+  (custom-set-faces
+   '(default ((t (:foreground "wheat" :background "black"))))
+   '(flyspell-duplicate ((t (:foreground "Gold3" :underline t :weight normal))))
+   '(flyspell-incorrect ((t (:foreground "OrangeRed" :underline t :weight normal))))
+   '(font-lock-comment-face ((t (:foreground "SteelBlue1"))))
+   '(font-lock-function-name-face ((t (:foreground "gold"))))
+   '(font-lock-keyword-face ((t (:foreground "springgreen"))))
+   '(font-lock-type-face ((t (:foreground "PaleGreen"))))
+   '(font-lock-variable-name-face ((t (:foreground "Coral"))))
+   '(menu ((((type x-toolkit)) (:background "light slate gray" :foreground "wheat" :box (:line-width 2 :color "grey75" :style released-button)))))
+   '(mode-line ((t (:foreground "black" :background "light slate gray"))))
+   '(tool-bar ((((type x w32 mac) (class color)) (:background "midnight blue" :foreground "wheat" :box (:line-width 1 :style released-button))))))
+  (set-cursor-color "deep sky blue")
+  (set-foreground-color "wheat")
+  (set-background-color "black")
+  (set-face-foreground 'default "wheat")
+  (set-face-background 'default "black"))
+
+(defun faces_nox ()
+  ;; these are used when in terminal
+  (custom-set-faces
+   '(default ((t (:foreground "white" :background "black"))))
+   '(font-lock-comment-face ((t (:foreground "magenta"))))
+   '(font-lock-function-name-face ((t (:foreground "red"))))
+   '(font-lock-keyword-face ((t (:foreground "green"))))
+   '(font-lock-type-face ((t (:foreground "blue"))))
+   '(font-lock-string-face ((t (:foreground "cyan"))))
+   '(font-lock-variable-name-face ((t (:foreground "blue"))))
+   '(menu ((((type x-toolkit)) (:background "white" :foreground "black" :box (:line-width 2 :color "grey75" :style released-button)))))
+   '(modeline ((t (:foreground "blue" :background "white")))))
+  (set-cursor-color "blue")
+  (set-foreground-color "white")
+  (set-background-color "black")
+  (set-face-foreground 'default "white")
+  (set-face-background 'default "black"))
+
+(if window-system
+    (faces_x)
+  (faces_nox))
+
+
+;;BEGIN-RACKET-SCRIBBLE-EMACS-INSTALL
+;; Updated: 2013-01-22T12:12:30Z
+(condition-case err
+    (require 'scribble "/home/brian/.racket/planet/300/5.3.1/cache/neil/scribble-emacs.plt/1/2/scribble")
+  (error (message "Could not load Scribble Emacs: %s" err)))
+;;END-RACKET-SCRIBBLE-EMACS-INSTALL
+
+;;Loading Geiser
+(load-file "/home/brian/Programming/Lisp/scheme/geiser/geiser.el")
+ 
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(blink-matching-delay 2)
+ '(desktop-save-mode t)
+ '(erc-away-nickname "pushingpotion")
+ '(erc-email-userid "poppingtonic")
+ '(erc-modules (quote (autojoin button completion fill irccontrols list match menu move-to-prompt netsplit networks noncommands notifications readonly ring services smiley stamp track unmorse)))
+ '(global-hl-line-mode nil)
+ '(hl-line-sticky-flag nil)
+ '(safe-local-variable-values (quote ((package . user) (syntax . Common-Lisp) (whitespace-line-column . 80) (lexical-binding . t))))
+ '(show-paren-delay 0.5)
+ '(slime-repl-history-size 10000))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default ((t (:foreground "wheat" :background "black"))))
+ '(flyspell-duplicate ((t (:foreground "Gold3" :underline t :weight normal))))
+ '(flyspell-incorrect ((t (:foreground "OrangeRed" :underline t :weight normal))))
+ '(font-lock-comment-face ((t (:foreground "SteelBlue1"))))
+ '(font-lock-function-name-face ((t (:foreground "gold"))))
+ '(font-lock-keyword-face ((t (:foreground "springgreen"))))
+ '(font-lock-type-face ((t (:foreground "PaleGreen"))))
+ '(font-lock-variable-name-face ((t (:foreground "Coral"))))
+ '(hl-line ((t (:inherit nil))))
+ '(menu ((((type x-toolkit)) (:background "light slate gray" :foreground "wheat" :box (:line-width 2 :color "grey75" :style released-button)))))
+ '(mode-line ((t (:foreground "black" :background "light slate gray"))))
+ '(show-paren-match ((t (:background "orange red"))))
+ '(show-paren-mismatch ((t (:background "deep pink" :foreground "white"))))
+ '(tool-bar ((((type x w32 mac) (class color)) (:background "midnight blue" :foreground "wheat" :box (:line-width 1 :style released-button))))))
+(put 'scroll-left 'disabled nil)
+
+(add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
+
+
+                                        ;(add-to-list 'load-path "~/.emacs.d/el-get/el-get")
+
+(add-hook 'python-mode-hook 'auto-complete-mode)
+                                        ;(add-hook 'python-mode-hook 'jedi:ac-setup)
+
+;; Adding urlpaste.txt to the register `r`.
+;; To visit the file, type `C-x r j u`.
+(set-register ?u '(file . "/home/brian/writings/urlpaste.txt"))
+
+
+
+(add-hook 'clojure-mode-hook 'auto-complete-mode)
+
+(add-hook 'javascript-mode-hook 'auto-complete-mode)
+
+(add-hook 'haskell-mode-hook 'auto-complete-mode)
+
+(add-hook 'elixir-mode-hook 'auto-complete-mode)
+
+;; Gemfiles
+(add-to-list 'auto-mode-alist '("\\.cljx$" . clojure-mode))
+(add-to-list 'auto-mode-alist '("Gemfile$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Gemfile.lock$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\.rake$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\.gemspec$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\.ru$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Rakefile$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Capfile$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Vagrantfile$" . ruby-mode))
+
+;; Using the Coq Proof Assistant using Proof General
+;; (load-file "~/Programming/Coq/ProofGeneral/generic/proof-site.el")
+;; (setq coq-prog-name "/usr/bin/coqtop")
+;; (add-to-list 'auto-mode-alist '("\\.v$" . coq-mode))
+
+(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode)) 
+
+;; Enable YASnippets minor mode for html-mode
+(add-hook
+ 'html-mode-hook
+ '(lambda ()
+    (yas-minor-mode)))
+
+;; Enable YASnippets minor mode for ruby-mode
+;;(add-hook
+ ;;
+;; 'ruby-mode-hook
+ ;;
+;; '(lambda ()
+    ;;
+;    (yas-minor-mode)))
+;;
+
+;; all .plan files will be opened in text-mode
+(add-to-list 'auto-mode-alist '("\\.plan$" . text-mode))
+
+(add-to-list 'auto-mode-alist '("\\poppingtonic-github$" . shell-script-mode))
+
+(add-to-list 'auto-mode-alist '("\\.bash_aliases$" . shell-script-mode))
+
+(add-to-list 'auto-mode-alist '("\\.zsh$" . shell-script-mode))
+(add-to-list 'auto-mode-alist '("\\.zsh-theme$" . shell-script-mode))
+
+;; Guardfile, Capfile, Rake
+(add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Capfile$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Guardfile$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.gemspec$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.cap$" . ruby-mode))
+
+(add-to-list 'load-path "~/emacs.d/vendor")
+(require 'cider)
+
+(global-undo-tree-mode)
+
+(add-to-list 'auto-mode-alist '("\\.clj$" . paredit-mode))
+
+;;;
+;(load  "/home/brian/.emacs.d/key-chord.el")
+;;;
+
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+
+;;;; Awesome hacks from
+;;;; https://vickychijwani.github.io/2013/02/13/nuggets-from-my-emacs-part-i/
+
+;; CSS color values colored by themselves
+;; http://news.ycombinator.com/item?id=873541
+(defvar hexcolor-keywords
+  '(("#[abcdef[:digit:]]+"
+     (0 (put-text-property
+         (match-beginning 0)
+         (match-end 0)
+         'face (list :background
+                     (match-string-no-properties 0)))))))
+
+(defun hexcolor-add-to-font-lock ()
+  (font-lock-add-keywords nil hexcolor-keywords))
+
+(add-hook 'css-mode-hook 'hexcolor-add-to-font-lock)
+(add-hook 'emacs-lisp-mode-hook 'hexcolor-add-to-font-lock)
+(add-hook 'less-css-mode-hook 'hexcolor-add-to-font-lock)
+
+;;; Comment or uncomment line. C-c r
+(defun comment-or-uncomment-region-or-line ()
+  "Like comment-or-uncomment-region, but if there's no mark \(that means no
+region\) apply comment-or-uncomment to the current line"
+  (interactive)
+  (if (not mark-active)
+      (comment-or-uncomment-region
+       (line-beginning-position) (line-end-position))
+    (if (< (point) (mark))
+        (comment-or-uncomment-region (point) (mark))
+      (comment-or-uncomment-region (mark) (point)))))
+
+;;(add-hook 'ruby-mode-hook 'comment-or-uncomment-region-or-line)
+(global-set-key "\C-c\C-r" 'comment-or-uncomment-region-or-line)
+
+
+(setq ido-enable-flex-matching t)
+(setq ido-everywhere t)
+(ido-mode 1)
+
+;; Auto-Saving temp files to different folder other than the fs tree.
+
+;; http://www.emacswiki.org/emacs/BackupDirectory
+(setq make-backup-files nil)
+(setq
+ backup-by-copying t ;don't clobber symlinks
+ backup-directory-alist
+ '(("." . "~/.emacs_saves")) ; don't litter my fs tree
+ delete-old-versions t
+ kept-new-versions 6
+ kept-old-versions 2
+ version-control t) ; use versioned backups
+
+
+(setq auto-save-default nil)
+
+;; PRY
+(add-to-list 'load-path "~/.emacs.d/vendor/emacs-pry")
+(require 'pry)
+;; optional suggestions
+(global-set-key [S-f9] 'pry-intercept)
+(global-set-key [f9] 'pry-intercept-rerun)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Code-folding Python
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-hook 'python-mode-hook 'hs-minor-mode)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Code-folding and block info for Ruby code
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-hook 'ruby-mode-hook 'hs-minor-mode)
+
+(add-to-list 'hs-special-modes-alist
+             '(ruby-mode
+               "\\(class\\|def\\|do\\|if\\)" "\\(end\\)" "#"
+               (lambda (arg) (ruby-end-of-block)) nil))
+
+(add-hook 'ruby-mode-hook
+          (lambda ()
+            (outline-minor-mode)
+            (setq outline-regexp " *\\(def \\|class\\|module\\|scenario\\)")))
+
+(require 'ruby-block)
+(setq ruby-block-delay 0)
+(setq ruby-block-highlight-toggle t)
+(add-hook 'ruby-mode-hook 'ruby-block-mode)
+
+(global-set-key [C-return] 'hs-toggle-hiding)
+(global-set-key [C-M-S-return] 'hs-show-all)
+(global-set-key [C-M-return] 'hs-hide-all)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Code Folding elisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Start the Emacs Server
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(server-start)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; JULIA
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;(load-file "/home/brian/Programming/Emacs/git-repos/ESS/lisp/ess-site.el")
+;(setq inferior-julia-program-name "")
+(add-to-list 'load-path "/home/brian/.emacs.d/vendor/julia-mode/")
+(require 'julia-mode)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Erlang
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-to-list 'auto-mode-alist '("\\.erl$" . erlang-mode))
+(add-to-list 'auto-mode-alist '("\\.hrl$" . erlang-mode))
+(add-to-list 'auto-mode-alist '("\\.xrl$" . erlang-mode))
+(add-to-list 'auto-mode-alist '("\\.yrl$" . erlang-mode))
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Code-folding and block info for Erlang code
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;(add-hook 'erlang-mode-hook 'hs-minor-mode)
+;;
+;;(add-to-list 'hs-special-modes-alist
+;;             '(erlang-mode
+;;               "\\(cond\\|quote\\|defmodule\\|defmacro\\|defp\\|def\\|do\\|if\\)" "\\(end\\)" "#"
+;;               (lambda (arg) (erlang-end-of-block)) nil))
+;;
+;;(add-hook 'erlang-mode-hook
+;;          (lambda ()
+;;            (outline-minor-mode)
+;;            (setq outline-regexp " *\\(def \\|defp\\|defmodule\\|defmacro)")))
+;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Multiple Cursors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+;;(global-set-key (kbd "C-S-c C-\\") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-x <down>") 'mc/mark-next-like-this)
+;(global-set-key (kbd "C-S-c C-S-e") 'mc/mark-next-word-like-this)
+;;(global-set-key (kbd "C-S-c C-|") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-x <up>") 'mc/mark-previous-like-this)
+;(global-set-key (kbd "C-S-c C-S-w") 'mc/mark-previous-word-like-this)
+(global-set-key (kbd "<M-mouse-1>") 'mc/add-cursor-on-click)
+
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Expand Region
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'expand-region)
+(global-set-key (kbd "C-'") 'er/expand-region)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Clojure Mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'clojure-mode)
+(add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Elixir
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(add-to-list 'load-path "/home/brian/.emacs.d/vendor/emacs-elixir-2.0.1/")
+(require 'elixir-mode)
+(add-to-list 'auto-mode-alist '("\\.ex$" . elixir-mode))
+(add-to-list 'auto-mode-alist '("\\.exs$" . elixir-mode))
+(add-to-list 'auto-mode-alist '("\\mix.lock$" . elixir-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Elixir Mix (Alchemist mode)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;(add-to-list 'load-path "~/.emacs.d/vendor/alchemist.el/")
+;;(require 'alchemist)
+;;(add-to-list 'auto-mode-alist '("\\.exs$" . alchemist-mode))
+;;(add-to-list 'auto-mode-alist '("\\.ex$" . alchemist-mode))
+;;(add-to-list 'auto-mode-alist '("\\mix.lock$" . alchemist-mode))
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Code-folding and block info for Elixir code
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(add-hook 'elixir-mode-hook 'hs-minor-mode)
+
+(add-to-list 'hs-special-modes-alist
+             '(elixir-mode
+               "\\(cond\\|quote\\|defmodule\\|defmacro\\|defmacrop\\|defp\\|def\\|do\\|if\\)" "\\(end\\)" "#"
+               (lambda (arg) (ruby-end-of-block)) nil))
+
+(add-hook 'elixir-mode-hook
+          (lambda ()
+            (outline-minor-mode)
+            (setq outline-regexp " *\\(def \\|defp\\|defmodule\\|defmacro\\|defmacrop)")))
+
+(add-hook 'elixir-mode-hook 'auto-complete-mode)
+
+;; Elixir YASnippets
+(load "~/.emacs.d/vendor/elixir-yasnippets/elixir-yasnippets.el")
+(require 'elixir-yasnippets)
+(add-hook 'elixir-mode-hook 'elixir-yasnippets)
+
+;; Ruby YASnippets
+(load "~/.emacs.d/custom/ruby-yasnippets/ruby-yasnippets.el")
+(require 'ruby-yasnippets)
+
+;; Origami.el
+(add-to-list 'load-path (expand-file-name "/home/brian/.emacs.d/vendor/origami.el/"))
+(require 'origami)
+
+;; Haskell Indent
+(custom-set-variables
+ '(haskell-mode-hook '(turn-on-haskell-indentation)))
+
+;; Full Screen
+(defun fullscreen ()
+  (interactive)
+  (set-frame-parameter nil 'fullscreen
+		       (if (frame-parameter nil 'fullscreen) nil 'fullboth)))
+(global-set-key [f11] 'fullscreen)
+
+;; Kill other buffers
+(defun kill-other-buffers ()
+    "Kill all other buffers."
+    (interactive)
+    (mapc 'kill-buffer
+          (delq (current-buffer)
+                (remove-if-not 'buffer-file-name (buffer-list)))))
+
+(global-set-key (kbd "C-c k o b") 'kill-other-buffers)
+;;(set-default 'tramp-default-proxies-alist (quote ((".*" "\\`root\\'" "/ssh:%h:"))))
+;;
+;;(eval-after-load "tramp"
+;;  '(progn
+;;     (defvar sudo-tramp-prefix
+;;       "/sudo:"
+;;       (concat "Prefix to be used by sudo commands when building tramp path "))
+;;     (defun sudo-file-name (filename)
+;;       (set 'splitname (split-string filename ":"))
+;;       (if (> (length splitname) 1)
+;;         (progn (set 'final-split (cdr splitname))
+;;                (set 'sudo-tramp-prefix "/sudo:")
+;;                )
+;;         (progn (set 'final-split splitname)
+;;                (set 'sudo-tramp-prefix (concat sudo-tramp-prefix "root@localhost:")))
+;;         )
+;;       (set 'final-fn (concat sudo-tramp-prefix (mapconcat (lambda (e) e) final-split ":")))
+;;       (message "splitname is %s" splitname)
+;;       (message "sudo-tramp-prefix is %s" sudo-tramp-prefix)
+;;       (message "final-split is %s" final-split)
+;;       (message "final-fn is %s" final-fn)
+;;       (message "%s" final-fn)
+;;       )
+;;
+;;     (defun sudo-find-file (filename &optional wildcards)
+;;       "Calls find-file with filename with sudo-tramp-prefix prepended"
+;;       (interactive "fFind file with sudo ")
+;;       (let ((sudo-name (sudo-file-name filename)))
+;;         (apply 'find-file
+;;                (cons sudo-name (if (boundp 'wildcards) '(wildcards))))))
+;;
+;;     (defun sudo-reopen-file ()
+;;       "Reopen file as root by prefixing its name with sudo-tramp-prefix and by clearing buffer-read-only"
+;;       (interactive)
+;;       (let*
+;;           ((file-name (expand-file-name buffer-file-name))
+;;            (sudo-name (sudo-file-name file-name)))
+;;         (progn
+;;           (setq buffer-file-name sudo-name)
+;;           (rename-buffer sudo-name)
+;;           (setq buffer-read-only nil)
+;;           (message (concat "File name set to " sudo-name)))))
+;;
+;;     (global-set-key (kbd "C-c o s") 'sudo-reopen-file)))
+;;
+ 
+;; nyan mode
+;;(add-to-list 'load-path "~/.emacs.d/vendor/nyan-mode")
+;;(require 'nyan-mode)
+;;(nyan-mode)
+;;(nyan-start-animation)
+
+(require 'auto-complete)
+(global-auto-complete-mode t)
+
+;; W3M
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/w3m")
+(autoload 'w3m "w3m" "Interface for w3m on Emacs." t)
+
+(require 'w3m-load)
+
+
+
+;;
+;; Rust YASnippets
+(load "~/.emacs.d/custom/rust-yasnippets/rust-yasnippets.el")
+(require 'rust-yasnippets)
+(add-hook 'rust-mode-hook 'auto-complete-mode)
+(add-to-list 'auto-mode-alist '("\\.toml$" . rust-mode))
+;; Mode-compile
+(defun mode-compile-quiet ()
+  (interactive)
+  (cl-flet ((read-string (&rest args) ""))
+    (mode-compile)))
+
+;; C-c C-% will set a buffer local hook to use mode-compile after saving
+(global-set-key '[(ctrl c) (ctrl %)]
+                (lambda () 
+                  (interactive)
+                  (if (member 'mode-compile-quiet after-save-hook)
+                      (progn
+                        (setq after-save-hook 
+                              (remove 'mode-compile-quiet after-save-hook))
+                        (message "No longer compiling after saving."))
+                    (progn
+                      (add-to-list 'after-save-hook 'mode-compile-quiet)
+                      (message "Compiling after saving.")))))
+
+;; Name compilation buffer after the buffer name
+(setq compilation-buffer-name-function 
+      (lambda (mode) (concat "*" (downcase mode) ": " (buffer-name) "*")))
+
+;; Use rbenv to configure the ruby version used by Emacs.
+(rbenv-use-global)
+(global-rbenv-mode)
+;; Opens a manually edited file containing a list of documents I had
+;; open during the last session, that I'd like to continue reading.
+
+(defun wherewasi ()
+  (interactive)
+  (find-file "~/.wherewasi"))
+
+(wherewasi)
+
+(defun booklist ()
+  (interactive)
+  (find-file "~/.booklist"))
+
+(booklist)
+
+(defun energy_scales ()
+  (interactive)
+  (find-file "~/.energy_scales")
+  (bury-buffer))
+
+(energy_scales)
+
+
+(defun plan ()
+  (interactive)
+  (find-file "~/.plan")
+  (bury-buffer))
+
+(plan)
+
+;; rdebug.el
+(load "~/.emacs.d/vendor/rdebug/rdebug.el")
+(require 'rdebug)
+
+;; Scala
+(add-to-list 'auto-mode-alist '("\\.sbt$" . scala-mode))
+(add-to-list 'auto-mode-alist '("\\.exs$" . scala-mode))
+
+;; Org-trello
+;; http://org-trello.github.io/install.html
+;; (custom-set-variables '(org-trello-files '("/path/to/file0" "/path/to/file1")))
